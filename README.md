@@ -1,4 +1,4 @@
-- 👋 Hi, I’m @owya490
+## 👋 Hi, I’m @owya490 - Owen Yang 😎
 - 👀 I’m interested in Articfical Intelligence and Machine Learning!
 - 🌱 I’m currently learning Computer Science
 - 💞️ I’m looking to collaborate on ...

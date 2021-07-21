@@ -1,7 +1,7 @@
 ## 👋 Hi, I’m @owya490 - Owen Yang 😎
 ![image](https://github.com/owya490/owya490/blob/main/pixel%20gif%20japan.gif)
 ## 📙About me!
-- 👀 I’m interested in Articfical Intelligence and Machine Learning!
+- 👀 I’m interested in Artificial Intelligence and Machine Learning!
 - 🌱 I’m currently learning Computer Science
 - 💞️ I’m looking to collaborate on ...
 - 📫 How to reach me: owenyang2002@outlook.com & https://www.linkedin.com/in/owen-yang-778689199

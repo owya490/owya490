@@ -73,19 +73,48 @@ function testGetCurrentWeekRow() {
 // ---------------------------------------------------------------------------
 
 /**
- * Loads SheetJS into the global scope.
+ * Returns the SheetJS library, loading it on first use.
  *
- * Option A (quick): CDN eval on each run — works but adds ~1–2s latency.
- * Option B (recommended): download https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js
- *   and add it as a separate script file named "xlsx.full.min.js" in the same project.
- *   Then delete or comment out the eval block below.
+ * Option A (quick): CDN load via loadSheetJS_ (needs script.external_request scope).
+ * Option B (recommended): add xlsx.full.min.js as a separate script file — then
+ *   loadSheetJS_ becomes a no-op once globalThis.XLSX exists.
+ */
+function getXLSX_() {
+  if (typeof globalThis.XLSX !== 'undefined') {
+    return globalThis.XLSX;
+  }
+  loadSheetJS_();
+  return globalThis.XLSX;
+}
+
+/**
+ * Loads SheetJS into globalThis.XLSX.
+ *
+ * Apps Script V8 can expose a `module` object. SheetJS then exports to
+ * module.exports instead of defining global XLSX — plain eval() breaks.
  */
 function loadSheetJS_() {
-  if (typeof XLSX !== 'undefined') return;
+  if (typeof globalThis.XLSX !== 'undefined') return;
 
   const cdnUrl =
     'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
-  eval(UrlFetchApp.fetch(cdnUrl).getContentText());
+  const code = UrlFetchApp.fetch(cdnUrl).getContentText();
+
+  const loader = new Function(
+    'var module = undefined; var exports = undefined;' +
+      code +
+      '\nreturn (typeof XLSX !== "undefined" ? XLSX : null);'
+  );
+  const lib = loader();
+
+  if (!lib || typeof lib.read !== 'function') {
+    throw new Error(
+      'SheetJS failed to load. Add xlsx.full.min.js as a separate script file ' +
+        '(see google-apps-script/README.md).'
+    );
+  }
+
+  globalThis.XLSX = lib;
 }
 
 /**
@@ -94,7 +123,7 @@ function loadSheetJS_() {
  * @returns {Array<Array<*>>} 2D array of cell values
  */
 function readXlsxSheet_(fileId, sheetName) {
-  loadSheetJS_();
+  const XLSX = getXLSX_();
 
   const file = DriveApp.getFileById(fileId);
   const mime = file.getMimeType();

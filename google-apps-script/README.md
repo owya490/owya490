@@ -6,10 +6,13 @@ Parses the **SYNC EM Worship** `.xlsx` file directly from Google Drive in memory
 
 1. Open [Google Apps Script](https://script.google.com/) → **New project**.
 2. Paste `WorshipSyncReader.gs` into the editor.
-3. **(Recommended)** Add SheetJS as a second script file for faster runs:
-   - Download [xlsx.full.min.js (v0.20.3)](https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js)
-   - In Apps Script: **+** → **Script** → name it `xlsx.full.min.js` → paste the file contents
-   - Comment out the `eval(...)` line in `loadSheetJS_()` if you do this
+3. **SheetJS** — pick one:
+   - **CDN (quick):** use `loadSheetJS_()` as-is (needs `script.external_request` scope). If you see `XLSX is not defined`, update to the latest `WorshipSyncReader.gs` — plain `eval()` does not work in Apps Script V8.
+   - **Bundled (recommended):** download [xlsx.full.min.js (v0.20.3)](https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js), add as script file `xlsx.full.min.js`, and prepend this line at the very top of that file:
+     ```javascript
+     var module = undefined; var exports = undefined;
+     ```
+     Then you can remove the `script.external_request` scope from `appsscript.json`.
 4. Run `testGetCurrentWeekRow()` → approve Drive permissions.
 5. Use `getCurrentWeekWorshipRow()` from triggers or other scripts.
 

@@ -14,7 +14,18 @@ Parses the **SYNC EM Worship** `.xlsx` file directly from Google Drive in memory
      ```
      Then you can remove the `script.external_request` scope from `appsscript.json`.
 4. Run `testGetCurrentWeekRow()` → approve Drive permissions.
-5. Use `getCurrentWeekWorshipRow()` from triggers or other scripts.
+5. Set **Script properties** → `API_TOKEN` = a long random secret (recommended).
+6. **Deploy → New deployment → Web app**
+   - Execute as: **Me**
+   - Who has access: **Anyone** (or Anyone, even anonymous)
+7. Hit the deployment URL:
+   ```
+   https://script.google.com/macros/s/.../exec?token=YOUR_SECRET
+   ```
+
+> **Important:** `doGet` must return `ContentService.createTextOutput(...)`, not a plain object. Returning a raw JS object causes: *"The script completed but the returned value is not a supported return type."*
+
+After code changes, always **Deploy → Manage deployments → Edit → New version**.
 
 ## File details
 
@@ -31,20 +42,44 @@ By default (`matchStrategy: 'sunday'`), the script finds the row whose **column 
 
 Set `matchStrategy: 'same-week'` in `CONFIG` if you instead want any row whose date falls in the same Sunday–Saturday week as today.
 
-## Return value
+## API response (`doGet`)
+
+```json
+{
+  "ok": true,
+  "rowNumber": 32,
+  "date": "05/07/2026",
+  "headers": ["Date", "Preparation", "Call to Worship", "Adoration", "Assurance of Pardon"],
+  "row": {
+    "Date": "05/07/2026",
+    "Preparation": "...",
+    "Call to Worship": "Phil 4:4-7"
+  },
+  "rawRow": ["05/07/2026", "...", "Phil 4:4-7"]
+}
+```
+
+### Squarespace fetch example
 
 ```javascript
-{
-  rowNumber: 32,
-  date: Date(2026-07-05),
-  headers: ['Date', 'Preparation', 'Call to Worship', 'Adoration', 'Assurance of Pardon'],
-  row: {
-    Date: '05/07/2026',
-    Preparation: '...',
-    'Call to Worship': 'Phil 4:4-7',
-  },
-  rawRow: ['05/07/2026', '...', 'Phil 4:4-7', ...]
+fetch('https://script.google.com/macros/s/DEPLOYMENT_ID/exec?token=YOUR_SECRET')
+  .then((r) => r.json())
+  .then((data) => {
+    if (!data.ok) throw new Error(data.error);
+    console.log(data.row['Call to Worship']);
+  });
+```
+
+JSONP fallback (if CORS blocks fetch):
+
+```html
+<script>
+function renderWorship(data) {
+  if (!data.ok) return;
+  document.getElementById('call-to-worship').textContent = data.row['Call to Worship'];
 }
+</script>
+<script src="https://script.google.com/macros/s/DEPLOYMENT_ID/exec?token=YOUR_SECRET&callback=renderWorship"></script>
 ```
 
 ## Important notes

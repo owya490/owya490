@@ -19,8 +19,101 @@ const CONFIG = {
   matchStrategy: 'sunday', // 'sunday' | 'same-week'
 };
 
+// ---------------------------------------------------------------------------
+// Web app (doGet) — must return ContentService output, not a plain object
+// ---------------------------------------------------------------------------
+
 /**
- * Public entry point — returns the current week's worship row as an object.
+ * Web app entry point.
+ *
+ * Deploy as: Execute as "Me", Who has access "Anyone" (or Anyone anonymous).
+ *
+ * Examples:
+ *   GET .../exec?token=YOUR_SECRET
+ *   GET .../exec?token=YOUR_SECRET&callback=renderWorship   (JSONP for Squarespace)
+ *
+ * Set API_TOKEN in Project Settings → Script properties.
+ * @param {GoogleAppsScript.Events.DoGet} e
+ * @returns {GoogleAppsScript.Content.TextOutput}
+ */
+function doGet(e) {
+  const params = (e && e.parameter) || {};
+
+  try {
+    assertAuthorized_(params.token);
+
+    const result = getCurrentWeekWorshipRow();
+    const payload = serializeWorshipRow_(result);
+    return createJsonResponse_(payload, params.callback);
+  } catch (err) {
+    const message = err && err.message ? err.message : String(err);
+    return createJsonResponse_({ ok: false, error: message }, params.callback);
+  }
+}
+
+/**
+ * @param {string|undefined} token
+ */
+function assertAuthorized_(token) {
+  const expected = PropertiesService.getScriptProperties().getProperty('API_TOKEN');
+  if (!expected) return; // optional until you set API_TOKEN in script properties
+  if (token !== expected) {
+    throw new Error('Unauthorized');
+  }
+}
+
+/**
+ * @param {*} result
+ * @returns {Object}
+ */
+function serializeWorshipRow_(result) {
+  const tz = Session.getScriptTimeZone();
+
+  return {
+    ok: true,
+    rowNumber: result.rowNumber,
+    date: Utilities.formatDate(result.date, tz, 'dd/MM/yyyy'),
+    headers: result.headers,
+    row: result.row,
+    rawRow: result.rawRow.map((cell) => serializeCell_(cell, tz)),
+  };
+}
+
+/**
+ * @param {*} cell
+ * @param {string} tz
+ * @returns {*}
+ */
+function serializeCell_(cell, tz) {
+  if (cell instanceof Date) {
+    return Utilities.formatDate(cell, tz, 'dd/MM/yyyy');
+  }
+  return cell ?? '';
+}
+
+/**
+ * Apps Script web apps only accept ContentService / HtmlService return types.
+ * @param {Object} payload
+ * @param {string|undefined} callback JSONP function name
+ * @returns {GoogleAppsScript.Content.TextOutput}
+ */
+function createJsonResponse_(payload, callback) {
+  const json = JSON.stringify(payload);
+
+  if (callback) {
+    const safeCallback = String(callback).replace(/[^\w$.]/g, '');
+    return ContentService.createTextOutput(safeCallback + '(' + json + ');').setMimeType(
+      ContentService.MimeType.JAVASCRIPT
+    );
+  }
+
+  return ContentService.createTextOutput(json).setMimeType(
+    ContentService.MimeType.JSON
+  );
+}
+
+/**
+ * Returns the current week's worship row as an object.
  * @returns {{
  *   rowNumber: number,
  *   date: Date,
@@ -176,6 +269,7 @@ function readXlsxSheet_(fileId, sheetName) {
  * @returns {*}
  */
 function readCellValue_(worksheet, r, c) {
+  const XLSX = getXLSX_();
   const addr = XLSX.utils.encode_cell({ r, c });
   const cell = worksheet[addr];
   if (!cell) return '';

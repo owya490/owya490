@@ -300,8 +300,13 @@ function getTargetWeekDate_(strategy) {
     return today;
   }
 
-  // Worship sheet dates are Sundays — use the Sunday of the current week
-  return getSundayOfWeek_(today);
+  // Worship sheet dates are Sundays — from Monday onward, use the upcoming Sunday
+  if (today.getDay() === 0) {
+    return today;
+  }
+  const nextSunday = new Date(today);
+  nextSunday.setDate(today.getDate() + (7 - today.getDay()));
+  return nextSunday;
 }
 
 /**

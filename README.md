@@ -8,9 +8,9 @@
 - 📫 How to reach me: owenyang2002@outlook.com & https://www.linkedin.com/in/owen-yang-778689199
 
 
-![Anurag's GitHub stats](https://github-readme-stats.vercel.app/api?username=owya490&show_icons=true&theme=algolia&include_all_commits=true)
+[![Owen's GitHub stats](https://github-stats-extended.vercel.app/api?username=owya490&show_icons=true&theme=algolia&include_all_commits=true)](https://github.com/stats-organization/github-stats-extended)
 
-[![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=owya490&layout=compact&theme=algolia)](https://github.com/anuraghazra/github-readme-stats)
+[![Top Langs](https://github-stats-extended.vercel.app/api/top-langs/?username=owya490&layout=compact&theme=algolia)](https://github.com/stats-organization/github-stats-extended)
 
 
 <!---
